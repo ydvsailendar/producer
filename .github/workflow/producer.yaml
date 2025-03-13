@@ -1,1 +1,27 @@
+name: Trigger Repository Dispatch
 
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  trigger-dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Generate a GitHub App token
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      # Step 2: Send repository dispatch event
+      - name: Send Repository Dispatch
+        run: |
+          curl -X POST \
+          -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/OWNER/TARGET_REPO/dispatches \
+          -d '{"event_type": "trigger-workflow", "client_payload": {"key": "value"}}'
